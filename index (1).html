@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Theory Flashcards 🎵</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d14;
+    --accent: #e8c96d;
+    --accent2: #7c6af5;
+    --text: #f0ece2;
+    --muted: #8a8699;
+    --border: rgba(232,201,109,0.2);
+    --green: #4caf82;
+    --red: #e05c6a;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(124,106,245,0.08) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 20%, rgba(232,201,109,0.06) 0%, transparent 50%);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: -0.02em;
+    text-align: center;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(135deg, var(--accent), #f0e6b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* SCORE BANNER */
+  .score-banner {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .score-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1.1rem;
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+  .score-pill.correct { background: rgba(76,175,130,0.15); border: 1px solid rgba(76,175,130,0.35); color: var(--green); }
+  .score-pill.wrong   { background: rgba(224,92,106,0.15); border: 1px solid rgba(224,92,106,0.35); color: var(--red); }
+  .score-pill.unseen  { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--muted); }
+  .score-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .score-dot.g { background: var(--green); }
+  .score-dot.r { background: var(--red); }
+  .score-dot.u { background: var(--muted); }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 600px;
+    height: 5px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    display: flex;
+  }
+  .pb-correct { height: 100%; background: var(--green); transition: width 0.4s ease; }
+  .pb-wrong   { height: 100%; background: var(--red);   transition: width 0.4s ease; }
+
+  .counter {
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.08em;
+    min-height: 1.2em;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1.8rem;
+    max-width: 680px;
+  }
+  .tab {
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+  }
+  .tab:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+  .tab.active { background: rgba(232,201,109,0.15); color: var(--accent); border-color: rgba(232,201,109,0.3); }
+  .tab.missed-tab { color: var(--red); border-color: rgba(224,92,106,0.25); }
+  .tab.missed-tab.active { background: rgba(224,92,106,0.15); color: var(--red); border-color: rgba(224,92,106,0.4); }
+  .missed-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--red); color: #fff; border-radius: 99px;
+    font-size: 0.65rem; font-weight: 700;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    margin-left: 4px; vertical-align: middle;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    max-width: 360px;
+    display: none;
+  }
+  .empty-state .emoji { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state h2 { font-family: 'Playfair Display', serif; color: var(--green); font-size: 1.6rem; margin-bottom: 0.5rem; }
+  .empty-state p { font-size: 0.88rem; line-height: 1.6; }
+
+  /* FLIP CARD */
+  .scene {
+    width: 100%;
+    max-width: 600px;
+    height: 300px;
+    perspective: 1200px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+  }
+  .card-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  }
+  .card-inner.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; inset: 0;
+    border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2.5rem;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border: 1px solid var(--border);
+    transition: border-color 0.35s;
+  }
+  .card-face.card-front {
+    background: linear-gradient(145deg, #1f1f38, #15152a);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .card-face.card-back {
+    background: linear-gradient(145deg, #1a2540, #111828);
+    transform: rotateY(180deg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .card-inner.marked-correct .card-face { border-color: rgba(76,175,130,0.55); }
+  .card-inner.marked-wrong   .card-face { border-color: rgba(224,92,106,0.55); }
+
+  /* status dot top-right of front face */
+  .status-dot {
+    position: absolute; top: 14px; right: 16px;
+    width: 10px; height: 10px; border-radius: 50%;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .status-dot.show { opacity: 1; }
+  .status-dot.g { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.r { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+  .card-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 1rem; opacity: 0.8; }
+  .card-term { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); text-align: center; line-height: 1.2; color: var(--text); }
+  .card-hint { margin-top: 1rem; font-size: 0.78rem; color: var(--muted); opacity: 0.6; min-height: 1.1em; }
+  .card-def { font-size: clamp(0.95rem, 2.2vw, 1.12rem); text-align: center; line-height: 1.65; color: #d8d4ec; max-width: 440px; }
+
+  /* GRADE BUTTONS */
+  .grade-row {
+    display: flex; gap: 0.9rem; justify-content: center;
+    margin-bottom: 1.2rem;
+    opacity: 0; pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .grade-row.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+  .btn-grade {
+    font-family: 'DM Sans', sans-serif; cursor: pointer; border: none;
+    border-radius: 12px; font-size: 0.9rem; font-weight: 600;
+    padding: 0.7rem 2rem; transition: all 0.18s; letter-spacing: 0.02em;
+  }
+  .btn-got-it  { background: rgba(76,175,130,0.18); color: var(--green); border: 1.5px solid rgba(76,175,130,0.4); }
+  .btn-got-it:hover { background: rgba(76,175,130,0.3); transform: translateY(-2px); }
+  .btn-got-it.selected { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .btn-missed  { background: rgba(224,92,106,0.15); color: var(--red); border: 1.5px solid rgba(224,92,106,0.35); }
+  .btn-missed:hover { background: rgba(224,92,106,0.28); transform: translateY(-2px); }
+  .btn-missed.selected { background: var(--red); color: #fff; border-color: var(--red); }
+
+  /* CONTROLS */
+  .controls { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem; }
+  button { font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; border-radius: 12px; font-size: 0.88rem; font-weight: 500; transition: all 0.2s; }
+  .btn-nav { background: rgba(255,255,255,0.06); color: var(--text); padding: 0.7rem 1.6rem; border: 1px solid rgba(255,255,255,0.1); }
+  .btn-nav:hover { background: rgba(255,255,255,0.12); transform: translateY(-1px); }
+  .btn-nav:disabled { opacity: 0.3; cursor: default; transform: none; }
+  .btn-flip { background: linear-gradient(135deg, var(--accent2), #9b8ff7); color: #fff; padding: 0.75rem 2.2rem; font-size: 0.9rem; box-shadow: 0 4px 20px rgba(124,106,245,0.35); }
+  .btn-flip:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(124,106,245,0.45); }
+
+  .bottom-row { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 0.4rem; }
+  .btn-sm { background: transparent; color: var(--muted); padding: 0.6rem 1rem; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.08); }
+  .btn-sm:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .btn-reset-scores { color: rgba(224,92,106,0.65); border-color: rgba(224,92,106,0.18); }
+  .btn-reset-scores:hover { color: var(--red); border-color: rgba(224,92,106,0.4); }
+
+  .tip { font-size: 0.73rem; color: var(--muted); opacity: 0.4; text-align: center; margin-top: 1rem; }
+
+  /* PIANO */
+  .piano-wrap { margin-top: 0.5rem; display: flex; gap: 2px; align-items: flex-end; height: 80px; }
+  .white-key { width: 28px; height: 72px; background: #f5f0e8; border-radius: 0 0 5px 5px; border: 1px solid #ccc; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-size: 0.55rem; font-weight: 600; color: #333; }
+  .white-key.highlighted { background: var(--accent); color: #111; }
+  .black-key-wrap { position: relative; width: 0; z-index: 2; }
+  .black-key { position: absolute; left: -9px; top: 0; width: 18px; height: 44px; background: #111; border-radius: 0 0 3px 3px; }
+
+  /* SONATA */
+  .sonata-diagram { display: flex; gap: 4px; margin-top: 0.8rem; width: 100%; max-width: 380px; }
+  .stage { flex: 1; padding: 8px 6px; border-radius: 8px; text-align: center; font-size: 0.7rem; font-weight: 500; line-height: 1.4; }
+  .stage-1 { background: rgba(124,106,245,0.25); border: 1px solid rgba(124,106,245,0.4); }
+  .stage-2 { background: rgba(232,201,109,0.18); border: 1px solid rgba(232,201,109,0.35); }
+  .stage-3 { background: rgba(100,200,150,0.18); border: 1px solid rgba(100,200,150,0.35); }
+  .s-label { font-size: 0.6rem; opacity: 0.6; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .s-name { font-family: 'Playfair Display', serif; font-size: 0.85rem; }
+  .ec-badge { display: inline-block; background: linear-gradient(135deg, #f7c94b, #e8a020); color: #111; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+
+<h1>Music Theory Flashcards</h1>
+<p class="subtitle">Tap a card · Grade yourself · Master it</p>
+
+<div class="score-banner">
+  <div class="score-pill correct"><div class="score-dot g"></div><span id="correctCount">0 correct</span></div>
+  <div class="score-pill wrong"><div class="score-dot r"></div><span id="wrongCount">0 missed</span></div>
+  <div class="score-pill unseen"><div class="score-dot u"></div><span id="unseenCount">30 unseen</span></div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="pb-correct" id="pbCorrect" style="width:0%"></div>
+  <div class="pb-wrong"   id="pbWrong"   style="width:0%"></div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="counter" id="counter"></div>
+
+<div class="scene" id="scene" onclick="handleSceneClick(event)">
+  <div class="card-inner" id="cardInner">
+    <div class="card-face card-front">
+      <div class="status-dot" id="statusDot"></div>
+      <div class="card-label">Term</div>
+      <div class="card-term" id="termText"></div>
+      <div class="card-hint" id="cardHint">Tap to reveal definition</div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-label">Definition</div>
+      <div id="defContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="grade-row" id="gradeRow">
+  <button class="btn-grade btn-got-it" id="btnGotIt" onclick="grade('correct')">✓ Got it!</button>
+  <button class="btn-grade btn-missed" id="btnMissed" onclick="grade('wrong')">✗ Missed it</button>
+</div>
+
+<div class="controls" id="navControls">
+  <button class="btn-nav" id="prevBtn" onclick="navigate(-1)">← Prev</button>
+  <button class="btn-flip" onclick="flipCard()">Flip Card</button>
+  <button class="btn-nav" id="nextBtn" onclick="navigate(1)">Next →</button>
+</div>
+
+<div class="bottom-row">
+  <button class="btn-sm" onclick="shuffle()">🔀 Shuffle</button>
+  <button class="btn-sm btn-reset-scores" onclick="resetScores()">↺ Reset Scores</button>
+</div>
+
+<p class="tip">Arrow keys to navigate · Space to flip · G = Got it · M = Missed it</p>
+
+<div class="empty-state" id="emptyState">
+  <div class="emoji">🎉</div>
+  <h2>No missed cards!</h2>
+  <p>Mark cards with <strong>✗ Missed it</strong> while studying and they'll appear here for focused review.</p>
+</div>
+
+<script>
+const ALL_CARDS = [
+  { cat:"General", term:"Chamber Music", def:"Music performed by a small group of musicians." },
+  { cat:"General", term:"Choral Music", def:"Music involving a group of singers." },
+  { cat:"General", term:"Form", def:"How music is organized." },
+  { cat:"General", term:"Key", def:"A group of 7 pitches on which most music is based." },
+  { cat:"General", term:"Scale", def:"To play all of the pitches in a key in a row, one at a time." },
+  { cat:"General", term:"Motif", def:"A small musical idea that is frequently present throughout a piece of music." },
+  { cat:"General", term:"Movement", def:"A complete piece of music that is still part of a larger work." },
+  { cat:"General", term:"Opus", def:"A term used to catalogue (put in chronological order) a composer's work." },
+  { cat:"Forms", term:"Symphony", def:"A large-scale work for orchestra." },
+  { cat:"Forms", term:"Concerto", def:"A piece of music for orchestra, but featuring a particular soloist." },
+  { cat:"Forms", term:"Cadenza", def:"A moment in a concerto when the orchestra stops, and the soloist shows off with something flashy and difficult." },
+  { cat:"Forms", term:"A-B Form", def:"Music made up of two distinct sections.", extra:"A — B" },
+  { cat:"Forms", term:"Rondo", def:"An extension of A-B form.", extra:"A — B — A — C — A — D — etc." },
+  { cat:"Forms", term:"Theme and Variation", def:"A musical idea is presented, then elaborated on in a series of related pieces of music." },
+  { cat:"Sonata", term:"Sonata Form", def:"A three-stage musical structure.", sonata:true },
+  { cat:"Sonata", term:"Stage 1 — Exposition", def:"The first stage of sonata form — the main musical themes are introduced (exposed) to the listener." },
+  { cat:"Sonata", term:"Stage 2 — Development", def:"The second stage of sonata form — themes are developed and transformed.", extraCredit:"The Development section involves frequent changes of key!" },
+  { cat:"Sonata", term:"Stage 3 — Recapitulation", def:"The third (final) stage of sonata form — themes from the Exposition return and the piece is brought to a close." },
+  { cat:"Tempo", term:"Tempo", def:"The speed of the pulse in a piece of music." },
+  { cat:"Tempo", term:"Adagio", def:"Slow tempo.", extra:"🐢 Slow" },
+  { cat:"Tempo", term:"Andante", def:"Walking speed — kind of slow.", extra:"🚶 Walking Speed" },
+  { cat:"Tempo", term:"Allegro", def:"Fast tempo.", extra:"🏃 Fast" },
+  { cat:"Tempo", term:"Presto", def:"Very fast tempo.", extra:"⚡ Very Fast" },
+  { cat:"Dynamics", term:"Dynamics", def:"Terms indicating volume in a piece of music." },
+  { cat:"Dynamics", term:"Piano  (p)", def:"Soft volume.", extra:"🔇 Soft" },
+  { cat:"Dynamics", term:"Mezzo Piano  (mp)", def:"Kind of soft volume.", extra:"🔈 Kind of Soft" },
+  { cat:"Dynamics", term:"Mezzo Forte  (mf)", def:"Kind of loud volume.", extra:"🔉 Kind of Loud" },
+  { cat:"Dynamics", term:"Forte  (f)", def:"Loud volume.", extra:"🔊 Loud" },
+  { cat:"Piano", term:"Piano Keyboard", def:"Notes from C to C: C, D, E, F, G, A, B, C", piano:true },
+  { cat:"Piano", term:"Pitch Direction", def:"Moving RIGHT on the keyboard = HIGHER pitch. Moving LEFT = LOWER pitch.", extra:"← Lower  ·  Higher →" }
+];
+
+const results = {}; // term -> 'correct' | 'wrong'
+const CATS = ["All", ...new Set(ALL_CARDS.map(c => c.cat))];
+let cards = [...ALL_CARDS];
+let idx = 0;
+let flipped = false;
+let activeCat = "All";
+
+// Build tabs
+const tabsEl = document.getElementById('tabs');
+CATS.forEach(cat => {
+  const t = document.createElement('button');
+  t.className = 'tab' + (cat === 'All' ? ' active' : '');
+  t.dataset.cat = cat;
+  t.textContent = cat;
+  t.onclick = () => switchTab(cat);
+  tabsEl.appendChild(t);
+});
+// Missed tab
+const missedTab = document.createElement('button');
+missedTab.className = 'tab missed-tab';
+missedTab.dataset.cat = 'Missed';
+missedTab.innerHTML = '✗ Missed <span class="missed-count" id="missedBadge">0</span>';
+missedTab.onclick = () => switchTab('Missed');
+tabsEl.appendChild(missedTab);
+
+function switchTab(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelector(`[data-cat="${cat}"]`).classList.add('active');
+  if (cat === 'Missed') cards = ALL_CARDS.filter(c => results[c.term] === 'wrong');
+  else if (cat === 'All') cards = [...ALL_CARDS];
+  else cards = ALL_CARDS.filter(c => c.cat === cat);
+  idx = 0;
+  showCard();
+}
+
+function showCard() {
+  const sceneEl  = document.getElementById('scene');
+  const emptyEl  = document.getElementById('emptyState');
+  const navEl    = document.getElementById('navControls');
+  const gradeEl  = document.getElementById('gradeRow');
+
+  if (cards.length === 0) {
+    sceneEl.style.display  = 'none';
+    navEl.style.display    = 'none';
+    gradeEl.classList.remove('visible');
+    emptyEl.style.display  = 'block';
+    document.getElementById('counter').textContent = '';
+    updateStats();
+    return;
+  }
+
+  sceneEl.style.display = '';
+  navEl.style.display   = '';
+  emptyEl.style.display = 'none';
+
+  const c = cards[idx];
+  flipped = false;
+  const inner = document.getElementById('cardInner');
+  inner.classList.remove('flipped','marked-correct','marked-wrong');
+  gradeEl.classList.remove('visible');
+  document.getElementById('btnGotIt').classList.remove('selected');
+  document.getElementById('btnMissed').classList.remove('selected');
+  document.getElementById('cardHint').textContent = 'Tap to reveal definition';
+
+  // Status dot
+  const dot = document.getElementById('statusDot');
+  const r = results[c.term];
+  dot.className = 'status-dot';
+  if (r === 'correct') { dot.classList.add('show','g'); inner.classList.add('marked-correct'); }
+  else if (r === 'wrong') { dot.classList.add('show','r'); inner.classList.add('marked-wrong'); }
+
+  document.getElementById('termText').textContent = c.term;
+
+  const defEl = document.getElementById('defContent');
+  defEl.innerHTML = '';
+  const defP = document.createElement('p');
+  defP.className = 'card-def';
+  defP.innerHTML = c.def;
+  defEl.appendChild(defP);
+  if (c.piano) defEl.appendChild(buildPiano());
+  if (c.sonata) defEl.appendChild(buildSonata());
+  if (c.extra) {
+    const ex = document.createElement('p');
+    ex.style.cssText = 'margin-top:0.8rem;font-size:0.85rem;color:var(--accent);font-weight:500;letter-spacing:0.05em;';
+    ex.textContent = c.extra;
+    defEl.appendChild(ex);
+  }
+  if (c.extraCredit) {
+    const ec = document.createElement('div');
+    ec.style.cssText = 'margin-top:0.7rem;text-align:center;';
+    ec.innerHTML = `<span class="ec-badge">⭐ Extra Credit</span><p style="margin-top:0.4rem;font-size:0.78rem;color:#e8c96d;opacity:0.85;">${c.extraCredit}</p>`;
+    defEl.appendChild(ec);
+  }
+
+  document.getElementById('counter').textContent = `Card ${idx + 1} of ${cards.length}`;
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === cards.length - 1;
+  updateStats();
+}
+
+function grade(result) {
+  const c = cards[idx];
+  results[c.term] = result;
+
+  const inner = document.getElementById('cardInner');
+  inner.classList.remove('marked-correct','marked-wrong');
+  inner.classList.add(result === 'correct' ? 'marked-correct' : 'marked-wrong');
+
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot show ' + (result === 'correct' ? 'g' : 'r');
+
+  document.getElementById('btnGotIt').classList.toggle('selected', result === 'correct');
+  document.getElementById('btnMissed').classList.toggle('selected', result === 'wrong');
+
+  updateStats();
+
+  // Auto-advance
+  setTimeout(() => { if (idx < cards.length - 1) navigate(1); }, 650);
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('cardInner').classList.toggle('flipped', flipped);
+  const gradeRow = document.getElementById('gradeRow');
+  const hint = document.getElementById('cardHint');
+  if (flipped) { gradeRow.classList.add('visible'); hint.textContent = ''; }
+  else { gradeRow.classList.remove('visible'); hint.textContent = 'Tap to reveal definition'; }
+}
+
+function handleSceneClick(e) {
+  if (e.target.closest('.btn-grade')) return;
+  flipCard();
+}
+
+function navigate(dir) {
+  const n = idx + dir;
+  if (n < 0 || n >= cards.length) return;
+  idx = n;
+  showCard();
+}
+
+function shuffle() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  idx = 0; showCard();
+}
+
+function resetScores() {
+  if (!confirm('Reset all scores and start fresh?')) return;
+  Object.keys(results).forEach(k => delete results[k]);
+  idx = 0;
+  updateStats();
+  if (activeCat === 'Missed') switchTab('All');
+  else showCard();
+}
+
+function updateStats() {
+  const total   = ALL_CARDS.length;
+  const correct = ALL_CARDS.filter(c => results[c.term] === 'correct').length;
+  const wrong   = ALL_CARDS.filter(c => results[c.term] === 'wrong').length;
+  const unseen  = total - correct - wrong;
+  document.getElementById('pbCorrect').style.width = (correct / total * 100) + '%';
+  document.getElementById('pbWrong').style.width   = (wrong   / total * 100) + '%';
+  document.getElementById('correctCount').textContent = `${correct} correct`;
+  document.getElementById('wrongCount').textContent   = `${wrong} missed`;
+  document.getElementById('unseenCount').textContent  = `${unseen} unseen`;
+  document.getElementById('missedBadge').textContent  = wrong;
+}
+
+function buildPiano() {
+  const wrap = document.createElement('div');
+  wrap.className = 'piano-wrap';
+  const notes = ['C','D','E','F','G','A','B','C'];
+  const blackAfter = [0,1,3,4,5];
+  notes.forEach((n, i) => {
+    const wk = document.createElement('div');
+    wk.className = 'white-key highlighted';
+    wk.textContent = n;
+    wrap.appendChild(wk);
+    if (blackAfter.includes(i) && i < notes.length - 1) {
+      const bw = document.createElement('div');
+      bw.className = 'black-key-wrap';
+      const bk = document.createElement('div');
+      bk.className = 'black-key';
+      bw.appendChild(bk);
+      wrap.appendChild(bw);
+    }
+  });
+  return wrap;
+}
+
+function buildSonata() {
+  const d = document.createElement('div');
+  d.className = 'sonata-diagram';
+  [{cls:'stage-1',label:'Stage 1',name:'Exposition'},{cls:'stage-2',label:'Stage 2',name:'Development'},{cls:'stage-3',label:'Stage 3',name:'Recap'}]
+    .forEach(s => {
+      const el = document.createElement('div');
+      el.className = `stage ${s.cls}`;
+      el.innerHTML = `<div class="s-label">${s.label}</div><div class="s-name">${s.name}</div>`;
+      d.appendChild(el);
+    });
+  return d;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') navigate(1);
+  else if (e.key === 'ArrowLeft') navigate(-1);
+  else if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  else if ((e.key === 'g' || e.key === 'G') && flipped) grade('correct');
+  else if ((e.key === 'm' || e.key === 'M') && flipped) grade('wrong');
+});
+
+showCard();
+</script>
+</body>
+</html>
